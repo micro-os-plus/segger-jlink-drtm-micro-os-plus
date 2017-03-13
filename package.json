@@ -1,6 +1,6 @@
 {
   "name": "@ilg/segger-jlink-drtm-micro-os-plus",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "An xPack with the µOS++ thread-aware plug-in for the SEGGER J-Link GDB Server",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
