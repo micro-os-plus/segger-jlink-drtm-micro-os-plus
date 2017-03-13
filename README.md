@@ -1,4 +1,4 @@
-# SEGGER J-Link GDB Server plug-in for µOS++ IIIe
+## SEGGER J-Link GDB Server plug-in for µOS++ IIIe
 
 An xPack with the µOS++ thread-aware plug-in for the SEGGER J-Link GDB Server.
 
@@ -7,7 +7,7 @@ This plug-in shows all existing threads in a µOS++ IIIe application.
 ## Easy install
 
 ```
-npm @ilg/segger-jlink-drtm-micro-os-plus
+npm install @ilg/segger-jlink-drtm-micro-os-plus
 ```
 
 ## Original files
