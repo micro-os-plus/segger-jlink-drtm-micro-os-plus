@@ -1,2 +1,2 @@
-# segger-jlink-drtm-micro-os-plus
-An xPack with the µOS++ thread-aware plug-in for the SEGGER J-Link GDB Server
+This project does not use the `master` branch, please
+switch to the `xpack` branch to get the project files.
