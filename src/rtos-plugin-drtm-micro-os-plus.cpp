@@ -47,7 +47,7 @@
 // ---------------------------------------------------------------------------
 
 #define PLUGIN_API_VERSION 100
-//#define USE_CUSTOM_ALLOCATOR
+#define USE_CUSTOM_ALLOCATOR
 
 // ---------------------------------------------------------------------------
 // Templates.
@@ -56,7 +56,7 @@
 template class segger::drtm::backend<rtos_plugin_server_api_t,
     rtos_plugin_symbols_t>;
 // Define a type alias.
-using backend_t = class segger::drtm::backend<rtos_plugin_server_api_t,
+using backend_type = class segger::drtm::backend<rtos_plugin_server_api_t,
 rtos_plugin_symbols_t>;
 
 #if defined(USE_CUSTOM_ALLOCATOR)
@@ -64,45 +64,45 @@ rtos_plugin_symbols_t>;
 // Template explicit instantiation.
 template class segger::drtm::memory_resource<rtos_plugin_server_api_t>;
 // Define a type alias.
-using backend_memory_resource_t = class segger::drtm::memory_resource<rtos_plugin_server_api_t>;
+using backend_memory_resource_type = class segger::drtm::memory_resource<rtos_plugin_server_api_t>;
 
 // Template explicit instantiation.
 template class drtm::polymorphic_allocator<void*>;
 // Define a type alias.
-using backend_allocator_t = class drtm::polymorphic_allocator<void*>;
+using backend_allocator_type = class drtm::polymorphic_allocator<void*>;
 
 #else
 
-using backend_allocator_t = class std::allocator<void*>;
+using backend_allocator_type = class std::allocator<void*>;
 
 #endif
 
 // ---------------------------------------------------------------------------
 
 // Template explicit instantiation.
-template class drtm::metadata<backend_t>;
+template class drtm::metadata<backend_type>;
 // Define a type alias.
-using metadata_type = class drtm::metadata<backend_t>;
+using metadata_type = class drtm::metadata<backend_type>;
 
 // Template explicit instantiation.
-template class drtm::thread<backend_t, backend_allocator_t>;
+template class drtm::thread<backend_type, backend_allocator_type>;
 // Define a type alias.
-using thread_type = class drtm::thread<backend_t, backend_allocator_t>;
+using thread_type = class drtm::thread<backend_type, backend_allocator_type>;
 
 // Template explicit instantiation.
-template class drtm::threads<backend_t, backend_allocator_t>;
+template class drtm::threads<backend_type, backend_allocator_type>;
 // Define a type alias.
-using threads_type = class drtm::threads<backend_t, backend_allocator_t>;
+using threads_type = class drtm::threads<backend_type, backend_allocator_type>;
 
 // Template explicit instantiation.
-template class drtm::run_time_data<backend_t, backend_allocator_t>;
+template class drtm::run_time_data<backend_type, backend_allocator_type>;
 // Define a type alias.
-using rtd_type = class drtm::run_time_data<backend_t, backend_allocator_t>;
+using rtd_type = class drtm::run_time_data<backend_type, backend_allocator_type>;
 
 // Template explicit instantiation.
-template class drtm::frontend<backend_t, backend_allocator_t>;
+template class drtm::frontend<backend_type, backend_allocator_type>;
 // Define a type alias.
-using frontend_t = class drtm::frontend<backend_t, backend_allocator_t>;
+using frontend_type = class drtm::frontend<backend_type, backend_allocator_type>;
 
 // ---------------------------------------------------------------------------
 // Local data structures.
@@ -116,16 +116,16 @@ static rtos_plugin_symbols_t symbols[] =
 
 static struct
 {
-  backend_t* backend;
+  backend_type* backend;
 #if defined(USE_CUSTOM_ALLOCATOR)
-  backend_memory_resource_t* memory_resource;
+  backend_memory_resource_type* memory_resource;
 #endif
-  backend_allocator_t* allocator;
+  backend_allocator_type* allocator;
 
   metadata_type* metadata;
   threads_type* threads;
   rtd_type* rtd;
-  frontend_t* frontend;
+  frontend_type* frontend;
 } drtm_;
 
 // ---------------------------------------------------------------------------
@@ -149,49 +149,49 @@ RTOS_Init (const rtos_plugin_server_api_t* api, uint32_t core)
     }
 
   // Allocate space for the DRTM backend object instance.
-  drtm_.backend = (backend_t*) api->allocate (sizeof(backend_t));
+  drtm_.backend = (backend_type*) api->allocate (sizeof(backend_type));
 
   // Construct the already allocated DRTM backend object instance.
-  new (drtm_.backend) backend_t
+  new (drtm_.backend) backend_type
     { api, symbols };
 
 #if defined(USE_CUSTOM_ALLOCATOR)
 
   // Allocate space for the DRTM memory resource object instance.
-  drtm_.memory_resource = (backend_memory_resource_t*) api->allocate (
-      sizeof(backend_memory_resource_t));
+  drtm_.memory_resource = (backend_memory_resource_type*) api->allocate (
+      sizeof(backend_memory_resource_type));
 
   // Construct the already allocated DRTM resource object object instance.
-  new (drtm_.memory_resource) backend_memory_resource_t
-    { api};
+  new (drtm_.memory_resource) backend_memory_resource_type
+    { api };
 
   // Allocate space for the DRTM allocator object instance.
-  drtm_.allocator = (backend_allocator_t*) api->allocate (
-      sizeof(backend_allocator_t));
+  drtm_.allocator = (backend_allocator_type*) api->allocate (
+      sizeof(backend_allocator_type));
 
   // Construct the already allocated DRTM allocator object instance.
-  new (drtm_.allocator) backend_allocator_t
-    { drtm_.memory_resource};
+  new (drtm_.allocator) backend_allocator_type
+    { drtm_.memory_resource };
 
 #else
 
   // Allocate space for the DRTM allocator object instance.
-  drtm_.allocator = (backend_allocator_t*) api->allocate (
-      sizeof(backend_allocator_t));
+  drtm_.allocator = (backend_allocator_type*) api->allocate (
+      sizeof(backend_allocator_type));
 
   // Construct the already allocated DRTM allocator object instance.
-  new (drtm_.allocator) backend_allocator_t
-    { };
+  new (drtm_.allocator) backend_allocator_type
+    {};
 
 #endif
 
   // --------------------------------------------------------------------------
 
   // Allocate space for the DRTM frontend object instance.
-  drtm_.frontend = (frontend_t*) api->allocate (sizeof(frontend_t));
+  drtm_.frontend = (frontend_type*) api->allocate (sizeof(frontend_type));
 
   // Construct the already allocated DRTM frontend object instance.
-  new (drtm_.frontend) frontend_t
+  new (drtm_.frontend) frontend_type
     { *drtm_.backend, *drtm_.allocator };
 
   return 1;
