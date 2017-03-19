@@ -48,6 +48,7 @@
 
 #define PLUGIN_API_VERSION 100
 #define USE_CUSTOM_ALLOCATOR
+//#define USE_CUSTOM_MEMORY_RESOURCE
 
 // ---------------------------------------------------------------------------
 // Templates.
@@ -60,6 +61,13 @@ using backend_type = class segger::drtm::backend<rtos_plugin_server_api_t,
 rtos_plugin_symbols_t>;
 
 #if defined(USE_CUSTOM_ALLOCATOR)
+
+// Template explicit instantiation.
+template class segger::drtm::allocator<void*, rtos_plugin_server_api_t>;
+// Define a type alias.
+using backend_allocator_type = class segger::drtm::allocator<void*, rtos_plugin_server_api_t>;
+
+#elif defined(USE_CUSTOM_MEMORY_RESOURCE)
 
 // Template explicit instantiation.
 template class segger::drtm::memory_resource<rtos_plugin_server_api_t>;
@@ -118,6 +126,7 @@ static struct
 {
   backend_type* backend;
 #if defined(USE_CUSTOM_ALLOCATOR)
+#elif defined(USE_CUSTOM_MEMORY_RESOURCE)
   backend_memory_resource_type* memory_resource;
 #endif
   backend_allocator_type* allocator;
@@ -141,9 +150,7 @@ RTOS_Init (const rtos_plugin_server_api_t* api, uint32_t core)
       && (core != JLINK_CORE_CORTEX_M3) && (core != JLINK_CORE_CORTEX_M4)
       && (core != JLINK_CORE_CORTEX_M7))
     {
-#if defined(DEBUG_)
       api->output_error ("Non Cortex-M environment, plug-in disabled.\n");
-#endif /* defined(DEBUG) */
 
       return 0;
     }
@@ -156,6 +163,16 @@ RTOS_Init (const rtos_plugin_server_api_t* api, uint32_t core)
     { api, symbols };
 
 #if defined(USE_CUSTOM_ALLOCATOR)
+
+  // Allocate space for the DRTM allocator object instance.
+  drtm_.allocator = (backend_allocator_type*) api->allocate (
+      sizeof(backend_allocator_type));
+
+  // Construct the already allocated DRTM allocator object instance.
+  new (drtm_.allocator) backend_allocator_type
+    { api };
+
+#elif defined(USE_CUSTOM_MEMORY_RESOURCE)
 
   // Allocate space for the DRTM memory resource object instance.
   drtm_.memory_resource = (backend_memory_resource_type*) api->allocate (
