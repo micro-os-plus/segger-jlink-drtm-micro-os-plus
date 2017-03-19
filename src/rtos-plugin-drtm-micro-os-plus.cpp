@@ -180,7 +180,7 @@ RTOS_Init (const rtos_plugin_server_api_t* api, uint32_t core)
 
   // Construct the already allocated DRTM resource object object instance.
   new (drtm_.memory_resource) backend_memory_resource_type
-    { api };
+    { api};
 
   // Allocate space for the DRTM allocator object instance.
   drtm_.allocator = (backend_allocator_type*) api->allocate (
@@ -188,7 +188,7 @@ RTOS_Init (const rtos_plugin_server_api_t* api, uint32_t core)
 
   // Construct the already allocated DRTM allocator object instance.
   new (drtm_.allocator) backend_allocator_type
-    { drtm_.memory_resource };
+    { drtm_.memory_resource};
 
 #else
 
