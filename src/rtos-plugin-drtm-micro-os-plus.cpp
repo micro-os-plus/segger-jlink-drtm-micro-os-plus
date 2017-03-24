@@ -38,17 +38,21 @@
  */
 
 #include <drtm/drtm.h>
-#include <assert.h>
+
 #include <segger-jlink-rtos-plugin-sdk/drtm-backend.h>
 #include <segger-jlink-rtos-plugin-sdk/drtm-memory.h>
+
 #include <stdio.h>
+#include <assert.h>
 #include <new>
 
 // ---------------------------------------------------------------------------
 
 #define PLUGIN_API_VERSION 100
 #define USE_CUSTOM_ALLOCATOR
-//#define USE_CUSTOM_MEMORY_RESOURCE
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
 
 // ---------------------------------------------------------------------------
 // Templates.
@@ -66,18 +70,6 @@ rtos_plugin_symbols_t>;
 template class segger::drtm::allocator<void*, rtos_plugin_server_api_t>;
 // Define a type alias.
 using backend_allocator_type = class segger::drtm::allocator<void*, rtos_plugin_server_api_t>;
-
-#elif defined(USE_CUSTOM_MEMORY_RESOURCE)
-
-// Template explicit instantiation.
-template class segger::drtm::memory_resource<rtos_plugin_server_api_t>;
-// Define a type alias.
-using backend_memory_resource_type = class segger::drtm::memory_resource<rtos_plugin_server_api_t>;
-
-// Template explicit instantiation.
-template class drtm::polymorphic_allocator<void*>;
-// Define a type alias.
-using backend_allocator_type = class drtm::polymorphic_allocator<void*>;
 
 #else
 
@@ -112,23 +104,21 @@ template class drtm::frontend<backend_type, backend_allocator_type>;
 // Define a type alias.
 using frontend_type = class drtm::frontend<backend_type, backend_allocator_type>;
 
+#pragma GCC diagnostic pop
+
 // ---------------------------------------------------------------------------
 // Local data structures.
 
 static rtos_plugin_symbols_t symbols[] =
   {
     { DRTM_SYMBOL_NAME, 0, 0 },
-    { } /* End of array. */
+    { 0, 0, 0 } /* End of array. */
   /**/
   };
 
 static struct
 {
   backend_type* backend;
-#if defined(USE_CUSTOM_ALLOCATOR)
-#elif defined(USE_CUSTOM_MEMORY_RESOURCE)
-  backend_memory_resource_type* memory_resource;
-#endif
   backend_allocator_type* allocator;
 
   metadata_type* metadata;
@@ -155,46 +145,21 @@ RTOS_Init (const rtos_plugin_server_api_t* api, uint32_t core)
       return 0;
     }
 
-  // Allocate space for the DRTM backend object instance.
-  drtm_.backend = (backend_type*) api->allocate (sizeof(backend_type));
-
-  // Construct the already allocated DRTM backend object instance.
-  new (drtm_.backend) backend_type
-    { api, symbols };
-
 #if defined(USE_CUSTOM_ALLOCATOR)
 
   // Allocate space for the DRTM allocator object instance.
-  drtm_.allocator = (backend_allocator_type*) api->allocate (
-      sizeof(backend_allocator_type));
+  drtm_.allocator = reinterpret_cast<backend_allocator_type*> (api->malloc (
+      sizeof(backend_allocator_type)));
 
   // Construct the already allocated DRTM allocator object instance.
   new (drtm_.allocator) backend_allocator_type
     { api };
 
-#elif defined(USE_CUSTOM_MEMORY_RESOURCE)
-
-  // Allocate space for the DRTM memory resource object instance.
-  drtm_.memory_resource = (backend_memory_resource_type*) api->allocate (
-      sizeof(backend_memory_resource_type));
-
-  // Construct the already allocated DRTM resource object object instance.
-  new (drtm_.memory_resource) backend_memory_resource_type
-    { api};
-
-  // Allocate space for the DRTM allocator object instance.
-  drtm_.allocator = (backend_allocator_type*) api->allocate (
-      sizeof(backend_allocator_type));
-
-  // Construct the already allocated DRTM allocator object instance.
-  new (drtm_.allocator) backend_allocator_type
-    { drtm_.memory_resource};
-
 #else
 
   // Allocate space for the DRTM allocator object instance.
-  drtm_.allocator = (backend_allocator_type*) api->allocate (
-      sizeof(backend_allocator_type));
+  drtm_.allocator = reinterpret_cast<backend_allocator_type*> (api->malloc (
+          sizeof(backend_allocator_type)));
 
   // Construct the already allocated DRTM allocator object instance.
   new (drtm_.allocator) backend_allocator_type
@@ -202,10 +167,19 @@ RTOS_Init (const rtos_plugin_server_api_t* api, uint32_t core)
 
 #endif
 
+  // Allocate space for the DRTM backend object instance.
+  drtm_.backend = reinterpret_cast<backend_type*> (api->malloc (
+      sizeof(backend_type)));
+
+  // Construct the already allocated DRTM backend object instance.
+  new (drtm_.backend) backend_type
+    { api, symbols };
+
   // --------------------------------------------------------------------------
 
   // Allocate space for the DRTM frontend object instance.
-  drtm_.frontend = (frontend_type*) api->allocate (sizeof(frontend_type));
+  drtm_.frontend = reinterpret_cast<frontend_type*> (api->malloc (
+      sizeof(frontend_type)));
 
   // Construct the already allocated DRTM frontend object instance.
   new (drtm_.frontend) frontend_type
@@ -251,22 +225,24 @@ EXPORT int
 RTOS_GetThreadDisplay (char* out_description, uint32_t thread_id)
 {
   assert(drtm_.frontend != nullptr);
-  return drtm_.frontend->get_thread_description (thread_id, out_description);
+  return drtm_.frontend->get_thread_description (thread_id, out_description,
+                                                 256);
 }
 
 EXPORT int
 RTOS_GetThreadReg (char* out_hex_value, uint32_t reg_index, uint32_t thread_id)
 {
   assert(drtm_.frontend != nullptr);
+  // The size is arbitrary, it is not documented.
   return drtm_.frontend->get_thread_register (thread_id, reg_index,
-                                              out_hex_value);
+                                              out_hex_value, 256);
 }
 
 EXPORT int
 RTOS_GetThreadRegList (char* out_hex_values, uint32_t thread_id)
 {
   assert(drtm_.frontend != nullptr);
-  return drtm_.frontend->get_thread_registers (thread_id, out_hex_values);
+  return drtm_.frontend->get_thread_registers (thread_id, out_hex_values, 512);
 }
 
 EXPORT int
