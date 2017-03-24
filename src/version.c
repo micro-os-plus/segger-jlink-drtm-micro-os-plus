@@ -39,12 +39,19 @@
 
 #include <segger-jlink-drtm-micro-os-plus/version.h>
 
-struct
+typedef struct version_s
 {
   int major;
   int minor;
   int patch;
-} ilg_segger_jlink_drtm_micro_os_plus_version =
+} version_t;
+
+#pragma GCC diagnostic push
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wmissing-variable-declarations"
+#endif /* defined(__clang__) */
+
+version_t ilg_segger_jlink_drtm_micro_os_plus_version =
   {
   //
       XPACK_ILG_SEGGER_JLINK_DRTM_MICRO_OS_PLUS_VERSION_MAJOR,
@@ -52,3 +59,5 @@ struct
       XPACK_ILG_SEGGER_JLINK_DRTM_MICRO_OS_PLUS_VERSION_PATCH
   /**/
   };
+
+#pragma GCC diagnostic pop
