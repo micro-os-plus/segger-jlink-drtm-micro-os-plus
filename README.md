@@ -6,8 +6,8 @@ This plug-in shows all existing threads in a µOS++ IIIe application.
 
 ## Easy install
 
-```
-npm install @ilg/segger-jlink-drtm-micro-os-plus
+```console
+$ npm install @ilg/segger-jlink-drtm-micro-os-plus
 ```
 
 ## Original files
